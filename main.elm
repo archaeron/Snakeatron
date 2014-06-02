@@ -31,6 +31,7 @@ directions : Signal [(Float, Float)]
 directions = sampleOn time keyboards
 
 printPos width height x y = move (-(width / 2) + 40, height / 2 - 20) (toForm . (color (rgb 255 255 255)) . asText <| (x * xSpeed, y * ySpeed))
+printPos width height x y xOffset yOffset player = move (-(width / 2) + xOffset, height / 2 - yOffset) (toForm . (color (rgb 255 255 255)) . asText <| (player, x * xSpeed, y * ySpeed))
 
 newPosition : Float -> Float -> Float
 newPosition width pos =
@@ -57,9 +58,10 @@ draw : (Float, Float) -> [(Float, Float)] -> Element
 draw (width, height) [(x1, y1), (x2, y2)] = collage (round width) (round height)
     [
         background (width, height),
-        move (x1*xSpeed, y1*ySpeed) player1,
-        move (x2*xSpeed, y2*ySpeed) player2,
-        printPos width height x1 y1
+        move (x1 * xSpeed, y1 * ySpeed) player1,
+        move (x2 * xSpeed, y2 * ySpeed) player2,
+        printPos width height x1 y1 70 20 "Red",
+        printPos width height x2 y2 70 45 "Blue"
     ]
 
 
