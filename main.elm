@@ -1,10 +1,11 @@
 import Mouse
 import Keyboard
 import Window
+import Debug
 
 -- Constants
-xSpeed = 100
-ySpeed = 100
+xSpeed = 20
+ySpeed = 20
 
 -- Helpers
 intTupleToFloat : (Int, Int) -> (Float, Float)
@@ -38,29 +39,47 @@ newPosition pos length =
         then if pos < 0 then (-) -pos 1 else (+) -pos 1
         else pos
 
-step : [(Float, Float)] -> [(Float, Float)] -> [(Float, Float)]
-step = zipWith (\ (x, y) (accX, accY) -> (newPosition (x + accX) 1000, newPosition (y + accY) 800))
+fst (x,_) = x
+snd (_,y) = y
+
+getLastX l = fst (head l)
+getLastY l = snd (head l)
+
+step : [(Float, Float)] -> [[(Float, Float)]] -> [[(Float, Float)]]
+step input trace =
+    let
+        i = Debug.log "input" input
+        t = Debug.log "trace" trace
+    in
+        zipWith
+        (\ (x, y) accs ->
+            (newPosition (x + getLastX accs) 1000, newPosition (y + getLastY accs) 800) :: accs
+        )
+        i
+        t
 
 
 background : (Float, Float) -> Form
 background (width, height) = filled (rgb 50 50 50) <| rect width height
 
 playerShape : Shape
-playerShape = rect 100 100
+playerShape = rect xSpeed ySpeed
 player1 : Form
 player1 = filled (rgb 100 0 0) playerShape
 player2 : Form
 player2 = filled (rgb 0 0 100) playerShape
 
-draw : (Float, Float) -> [(Float, Float)] -> Element
-draw (width, height) [(x1, y1), (x2, y2)] = collage (round width) (round height)
-    [
-        background (width, height),
-        move (x1 * xSpeed, y1 * ySpeed) player1,
-        move (x2 * xSpeed, y2 * ySpeed) player2,
-        printPos width height x1 y1 70 20 "Red",
-        printPos width height x2 y2 70 45 "Blue"
-    ]
+draw : (Float, Float) -> [[(Float, Float)]] -> Element
+draw (width, height) l =
+    let
+        tracePlayer1 = map (\(x,y) -> move (x * xSpeed,y * ySpeed) player1) (head l)
+        tracePlayer2 = map (\(x,y) -> move (x * xSpeed,y * ySpeed) player2) (head (tail l))
+        objects = [
+            background (width, height)
+        ]
+        canvas = objects ++ tracePlayer1 ++ tracePlayer2
+    in
+    collage (round width) (round height) canvas
 
 
-main = lift2 draw dimensions (foldp step [(0, 0), (0, 0)] keyboards)
+main = lift2 draw dimensions (foldp step [[(0, 0)], [(0, 0)]] keyboards)
