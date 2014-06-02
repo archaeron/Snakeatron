@@ -30,18 +30,16 @@ time = fps 30
 directions : Signal [(Float, Float)]
 directions = sampleOn time keyboards
 
-printPos width height x y = move (-(width / 2) + 40, height / 2 - 20) (toForm . (color (rgb 255 255 255)) . asText <| (x * xSpeed, y * ySpeed))
 printPos width height x y xOffset yOffset player = move (-(width / 2) + xOffset, height / 2 - yOffset) (toForm . (color (rgb 255 255 255)) . asText <| (player, x * xSpeed, y * ySpeed))
 
 newPosition : Float -> Float -> Float
-newPosition width pos =
-    if (abs pos * xSpeed) > (width / 2)
-    then -pos
-    else pos
+newPosition pos length =
+        if (abs (pos * xSpeed)) > (length / 2)
+        then if pos < 0 then (-) -pos 1 else (+) -pos 1
+        else pos
 
 step : [(Float, Float)] -> [(Float, Float)] -> [(Float, Float)]
-step =
-    zipWith (\ (x, y) (accX, accY) -> (x + accX, y + accY))
+step = zipWith (\ (x, y) (accX, accY) -> (newPosition (x + accX) 1000, newPosition (y + accY) 800))
 
 
 background : (Float, Float) -> Form
