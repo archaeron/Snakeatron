@@ -22,7 +22,7 @@ keyboards : Signal [(Float, Float)]
 keyboards = combine [keyboard1, keyboard2]
 
 dimensions : Signal (Float, Float)
-dimensions = lift intTupleToFloat Window.dimensions
+dimensions = intTupleToFloat <~ Window.dimensions
 
 time : Signal Time
 time = fps 30
