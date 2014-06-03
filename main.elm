@@ -30,8 +30,6 @@ time = fps 30
 directions : Signal [(Float, Float)]
 directions = sampleOn time keyboards
 
-printPos width height x y = move (-(width / 2) + 40, height / 2 - 20) (toForm . (color (rgb 255 255 255)) . asText <| (x * xSpeed, y * ySpeed))
-
 newPosition : Float -> Float -> Float
 newPosition width pos =
     if (abs pos * xSpeed) > (width / 2)
@@ -52,15 +50,34 @@ player1 : Form
 player1 = filled (rgb 100 0 0) playerShape
 player2 : Form
 player2 = filled (rgb 0 0 100) playerShape
+players = [player1, player2]
+
+printPos width height (x, y) = toForm . (color (rgb 255 255 255)) . asText <| (x * xSpeed, y * ySpeed)
+
+printPositions width height movements =
+    let
+        movePositions positions index =
+            case positions of
+                [] -> []
+                pos :: xs -> (move (-(width / 2) + 50, height / 2 - 20 - (index * 30)) pos) :: movePositions xs (index + 1)
+        positions = map (printPos width height) movements
+    in
+        movePositions positions 0
+
+
+
+movePlayers movements =
+    let
+        playersAndMoves = zip players movements
+    in
+        map (\ (player, (x, y)) -> move (x * xSpeed, y * ySpeed) player) playersAndMoves
+
 
 draw : (Float, Float) -> [(Float, Float)] -> Element
-draw (width, height) [(x1, y1), (x2, y2)] = collage (round width) (round height)
-    [
-        background (width, height),
-        move (x1*xSpeed, y1*ySpeed) player1,
-        move (x2*xSpeed, y2*ySpeed) player2,
-        printPos width height x1 y1
-    ]
+draw (width, height) movements = collage (round width) (round height)
+    ([
+        background (width, height)
+    ] ++ movePlayers movements ++ printPositions width height movements)
 
 
-main = lift2 draw dimensions (foldp step [(0, 0), (0, 0)] keyboards)
+main = lift2 draw dimensions (foldp step [(1, 1), (-1, -1)] keyboards)
