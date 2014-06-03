@@ -31,8 +31,6 @@ time = fps 30
 directions : Signal [(Float, Float)]
 directions = sampleOn time keyboards
 
-printPos width height x y xOffset yOffset player = move (-(width / 2) + xOffset, height / 2 - yOffset) (toForm . (color (rgb 255 255 255)) . asText <| (player, x * xSpeed, y * ySpeed))
-
 newPosition : Float -> Float -> Float
 newPosition pos length =
         if (abs (pos * xSpeed)) > (length / 2)
@@ -42,21 +40,15 @@ newPosition pos length =
 fst (x,_) = x
 snd (_,y) = y
 
-getLastX l = fst (head l)
-getLastY l = snd (head l)
+getLastX = fst . head
+getLastY = snd . head
 
 step : [(Float, Float)] -> [[(Float, Float)]] -> [[(Float, Float)]]
-step input trace =
-    let
-        i = Debug.log "input" input
-        t = Debug.log "trace" trace
-    in
-        zipWith
+step =
+    zipWith
         (\ (x, y) accs ->
             (newPosition (x + getLastX accs) 1000, newPosition (y + getLastY accs) 800) :: accs
         )
-        i
-        t
 
 
 background : (Float, Float) -> Form
@@ -68,16 +60,21 @@ player1 : Form
 player1 = filled (rgb 100 0 0) playerShape
 player2 : Form
 player2 = filled (rgb 0 0 100) playerShape
+players : [Form]
+players = [player1, player2]
+
+movePlayers players movements =
+    let
+        playersAndMovements = zip players movements
+        movedPlayers = map (\ (player, movements) -> map (\ (x, y) -> move (x * xSpeed, y * ySpeed) player) movements) playersAndMovements
+    in
+        concat movedPlayers
 
 draw : (Float, Float) -> [[(Float, Float)]] -> Element
 draw (width, height) l =
     let
-        tracePlayer1 = map (\(x,y) -> move (x * xSpeed,y * ySpeed) player1) (head l)
-        tracePlayer2 = map (\(x,y) -> move (x * xSpeed,y * ySpeed) player2) (head (tail l))
-        objects = [
-            background (width, height)
-        ]
-        canvas = objects ++ tracePlayer1 ++ tracePlayer2
+        playerShapes = movePlayers players l
+        canvas = (background (width, height)) :: playerShapes
     in
     collage (round width) (round height) canvas
 
